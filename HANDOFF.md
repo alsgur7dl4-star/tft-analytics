@@ -3,7 +3,7 @@
 ## Current State
 
 - Project scaffold initialized for a standalone TFT analytics service.
-- Dedicated PostgreSQL Docker resources are configured and separated from any `jobfit-ai` resources.
+- Dedicated PostgreSQL Docker resources are running and separated from any `jobfit-ai` resources.
 - Backend and frontend source trees are present, with authentication gates for primary product routes.
 
 ## Database
@@ -13,6 +13,7 @@
 - User: `tft_analytics_user`
 - Volume: `tft_analytics_postgres_data`
 - Host port: `5433`
+- Status: Docker container is running and healthy.
 
 Initial Alembic migration creates:
 
@@ -47,17 +48,19 @@ Initial Alembic migration creates:
 ## Recent Verification
 
 - `python -m compileall backend` passed on 2026-05-18.
+- Local backend virtual environment was created at `backend/.venv` and dependencies were installed from `backend/requirements.txt`.
+- `docker-compose up -d db` created and started `tft_analytics_postgres`.
+- Docker volume name was pinned in `docker-compose.yml` with `name: tft_analytics_postgres_data`.
+- `alembic upgrade head` succeeded against `tft_analytics_db`.
+- `docker exec tft_analytics_postgres psql -U tft_analytics_user -d tft_analytics_db -c "\dt"` confirmed 20 tables including `alembic_version`.
 - `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` have identical file hashes.
-- `git status --short` could not run because `c:\tft_project` is not initialized as a git repository yet.
+- Repository is initialized on `main` and tracks `origin/main`.
 - Frontend dependency install/build has not been run yet.
 
 ## Next Work
 
-- Initialize git when ready.
-- Create root `.env` with `POSTGRES_PASSWORD` for Docker Compose.
-- Create `backend/.env` and `frontend/.env` locally from examples.
-- Start PostgreSQL with `docker-compose up -d db`.
-- Install backend and frontend dependencies.
-- Run `alembic upgrade head`.
 - Add Riot API key locally and test Account/Match API calls.
+- Create an initial admin account with `python -m app.scripts.create_admin`.
+- Run FastAPI locally and smoke-test auth endpoints.
+- Install frontend dependencies and run `npm run dev`.
 - Expand match normalization and meta aggregation with live data.
