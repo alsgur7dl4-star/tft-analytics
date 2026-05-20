@@ -61,6 +61,8 @@ class CommonCodeGroupResponse(BaseModel):
     description: str | None = None
     codes: list[CommonCodeResponse] = []
 
+    model_config = {"from_attributes": True}
+
 
 class CommonCodeGroupCreate(BaseModel):
     group_key: str

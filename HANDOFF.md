@@ -95,6 +95,34 @@ Initial Alembic migration creates:
 - `batch_job_runs` 7컬럼, `batch_job_logs` 7컬럼, `tft_matches` 10컬럼, `tft_match_participants` 13컬럼, `tft_comps` 10컬럼, `tft_comp_stats_daily` 14컬럼 — 모두 모델과 일치.
 - `batch_job_runs` 데이터 없음 (Riot API key 미설정으로 실제 수집 미실행).
 
+## 2026-05-20 Updates (4th pass)
+
+- `common_code_repository.py`: `list_groups()`에 `selectinload(CommonCodeGroup.codes)` 추가 → N+1 쿼리 제거.
+- `common_code_service.py`: `list_groups()`에서 별도 `list_codes()` 루프 제거, 관계 직접 사용.
+- `schemas/admin.py`: `CommonCodeGroupResponse`에 `model_config = {"from_attributes": True}` 추가.
+- `requirements.txt`: `bcrypt==4.0.1` 핀 추가 (passlib 1.7.4 호환 버전).
+- `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`: 토큰 절약형으로 축약 (2045 → 989 chars, ~52% 감소).
+- 배치 파이프라인 전체 API 경로 검증 완료:
+  - `POST /api/admin/jobs/collect-tft-matches`: batch_job_runs/logs 정상 기록, 30소환사/250매치 수집 SUCCESS
+  - `POST /api/admin/jobs/recalculate-tft-stats`: 66개 조합 통계 재계산 SUCCESS (2736경기 분석)
+
+## DB 최종 현황 (2026-05-20)
+
+| 테이블 | 건수 |
+|---|---|
+| batch_job_runs | 2 |
+| batch_job_logs | 5 |
+| riot_accounts | 49 |
+| tft_summoners | 39 |
+| tft_matches | 342 |
+| tft_match_participants | 2,736 |
+| tft_units | 24,056 |
+| tft_traits | 29,557 |
+| tft_comps | 66 |
+| tft_comp_stats_daily | 66 |
+| common_code_groups | 5 |
+| common_codes | 19 |
+
 ## Next Work
 
 - Add Riot API key to `backend/.env` (`RIOT_API_KEY=RGAPI-...`).

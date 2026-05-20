@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.common import CommonCode, CommonCodeGroup
 
@@ -9,7 +9,13 @@ class CommonCodeRepository:
         self.db = db
 
     def list_groups(self) -> list[CommonCodeGroup]:
-        return list(self.db.scalars(select(CommonCodeGroup).order_by(CommonCodeGroup.group_key.asc())))
+        return list(
+            self.db.scalars(
+                select(CommonCodeGroup)
+                .order_by(CommonCodeGroup.group_key.asc())
+                .options(selectinload(CommonCodeGroup.codes))
+            )
+        )
 
     def get_group_by_key(self, group_key: str) -> CommonCodeGroup | None:
         return self.db.scalar(select(CommonCodeGroup).where(CommonCodeGroup.group_key == group_key))

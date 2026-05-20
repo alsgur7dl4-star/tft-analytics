@@ -14,19 +14,19 @@ class CommonCodeService:
 
     def list_groups(self) -> list[CommonCodeGroupResponse]:
         groups = self.repo.list_groups()
-        result = []
-        for group in groups:
-            codes = self.repo.list_codes(group.id)
-            result.append(
-                CommonCodeGroupResponse(
-                    id=group.id,
-                    group_key=group.group_key,
-                    group_name=group.group_name,
-                    description=group.description,
-                    codes=[CommonCodeResponse.model_validate(c, from_attributes=True) for c in codes],
-                )
+        return [
+            CommonCodeGroupResponse(
+                id=group.id,
+                group_key=group.group_key,
+                group_name=group.group_name,
+                description=group.description,
+                codes=sorted(
+                    [CommonCodeResponse.model_validate(c, from_attributes=True) for c in group.codes],
+                    key=lambda c: (c.sort_order, c.id),
+                ),
             )
-        return result
+            for group in groups
+        ]
 
     def create_group(self, group_key: str, group_name: str, description: str | None = None) -> CommonCodeGroupResponse:
         if self.repo.get_group_by_key(group_key):
