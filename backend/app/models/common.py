@@ -54,3 +54,23 @@ class BatchJobRun(Base):
     message: Mapped[str | None] = mapped_column(Text)
     meta_json: Mapped[dict | None] = mapped_column(JSON)
 
+    logs: Mapped[list["BatchJobLog"]] = relationship(
+        back_populates="job_run", cascade="all, delete-orphan", order_by="BatchJobLog.created_at"
+    )
+
+
+class BatchJobLog(Base):
+    __tablename__ = "batch_job_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    job_run_id: Mapped[int] = mapped_column(
+        ForeignKey("batch_job_runs.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    log_level: Mapped[str] = mapped_column(String(20), default="INFO", nullable=False)
+    step: Mapped[str | None] = mapped_column(String(120))
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    meta_json: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    job_run: Mapped[BatchJobRun] = relationship(back_populates="logs")
+

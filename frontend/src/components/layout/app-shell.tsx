@@ -46,13 +46,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
           {user?.role === "ADMIN" ? (
-            <Link
-              href="/admin/jobs"
-              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm text-slate-700 hover:bg-white"
-            >
-              <ShieldCheck size={17} />
-              Admin
-            </Link>
+            <>
+              <Link
+                href="/admin/jobs"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm text-slate-700 hover:bg-white"
+              >
+                <ShieldCheck size={17} />
+                Admin 작업
+              </Link>
+              <Link
+                href="/admin/codes"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md px-3 text-sm text-slate-700 hover:bg-white"
+              >
+                <ShieldCheck size={17} />
+                공통코드
+              </Link>
+            </>
           ) : null}
         </nav>
         <main>{children}</main>

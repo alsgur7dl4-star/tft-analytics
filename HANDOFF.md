@@ -57,10 +57,51 @@ Initial Alembic migration creates:
 - Repository is initialized on `main` and tracks `origin/main`.
 - Frontend dependency install/build has not been run yet.
 
+## 2026-05-20 Updates (2nd pass)
+
+- `riot_tft_client.py`: `get_challenger_league`, `get_grandmaster_league`, `get_summoner_by_summoner_id` 메서드 추가.
+- `tft_match_collector.py`: 챌린저/그마 리그 소환사 목록 수집 → PUUID 조회 → 매치 수집 전체 플로우 구현.
+- `tft_stats_aggregator.py`: 시너지 fingerprint 기반 조합 그룹핑 → 점수 계산 → TftComp/TftCompStatsDaily upsert 전체 구현. 공통코드 TIER_LABEL 그룹 참조하여 티어 라벨 검증.
+- `admin_service.py`: 매치 수집 잡을 FastAPI BackgroundTasks 패턴으로 분리. 독립 DB 세션 사용.
+- `api/admin.py`: `collect_tft_matches` 엔드포인트를 async + BackgroundTasks로 변경.
+- `scripts/seed_common_codes.py`: TIER_LABEL, JOB_LOG_LEVEL, JOB_STATUS, REGION, COMP_DIFFICULTY 공통코드 시드 등록. DB 적용 완료.
+- `recommenders/early_game_recommender.py`: 난이도 판별 로직을 pick_rate 기반 함수로 분리.
+
+## 2026-05-20 Updates
+
+- Added `batch_job_logs` table via Alembic migration `202605200001`.
+- `JobRepository` extended with `add_log()` and `list_logs()` methods.
+- `AdminService` now writes step-level logs (INFO/WARN/ERROR) per job run.
+- New `GET /api/admin/jobs/runs/{run_id}/logs` endpoint.
+- New `CommonCodeRepository`, `CommonCodeService` implemented.
+- Admin API extended: CRUD for code groups and codes under `/api/admin/codes/`.
+- Frontend: `AdminJobsScreen` updated to show collapsible step logs per run.
+- Frontend: `AdminCommonCodesScreen` and `/admin/codes` page added.
+- `riot.txt` and `.nojekyll` committed for GitHub Pages Riot API verification.
+
+## 2026-05-20 Bug Fixes (3rd pass)
+
+- `riot_tft_client.py`: `get_account_by_puuid(puuid, routing)` 메서드 추가. `/riot/account/v1/accounts/by-puuid/{puuid}` 호출로 gameName/tagLine 조회.
+- `tft_match_collector.py`:
+  - 함수 내부 `db.commit()` 제거 → 트랜잭션 경계를 caller(`run_collection_background`)로 이관.
+  - Riot Summoner API deprecated `name` 필드 사용 제거 → `get_account_by_puuid`로 gameName/tagLine 취득.
+  - `except Exception: continue` 패턴에 `logger.warning(...)` 추가 (silent swallowing 제거).
+- `admin_service.py`: `__import__("app.models.common", ...)` 안티패턴 제거 → 함수 내부 직접 `from app.models.common import BatchJobRun` 사용. 수집 완료 후 명시적 `db.commit()` 추가.
+- `tft_stats_aggregator.py`: `date.today()` (timezone-naive) → `datetime.now(timezone.utc).date()` 로 수정.
+
+## DB 상태 확인 (2026-05-20)
+
+- 전체 21개 테이블 정상 존재 (`\dt` 확인).
+- `batch_job_runs` 7컬럼, `batch_job_logs` 7컬럼, `tft_matches` 10컬럼, `tft_match_participants` 13컬럼, `tft_comps` 10컬럼, `tft_comp_stats_daily` 14컬럼 — 모두 모델과 일치.
+- `batch_job_runs` 데이터 없음 (Riot API key 미설정으로 실제 수집 미실행).
+
 ## Next Work
 
-- Add Riot API key locally and test Account/Match API calls.
+- Add Riot API key to `backend/.env` (`RIOT_API_KEY=RGAPI-...`).
 - Create an initial admin account with `python -m app.scripts.create_admin`.
 - Run FastAPI locally and smoke-test auth endpoints.
-- Install frontend dependencies and run `npm run dev`.
-- Expand match normalization and meta aggregation with live data.
+- Install frontend dependencies (`npm install`) and run `npm run dev`.
+- Implement unit-level item recommendation API and frontend screen.
+- Implement unit/comp name search API with tier filter.
+- Implement MCP server exposing TFT meta tools for AI assistants.
+- Expand match normalization and meta aggregation with live data once Riot API key is active.

@@ -54,6 +54,32 @@ export type SummonerSummary = {
   first_rate?: number | null;
 };
 
+export type BatchJobLog = {
+  id: number;
+  job_run_id: number;
+  log_level: "INFO" | "WARN" | "ERROR";
+  step: string | null;
+  message: string;
+  meta_json: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type CommonCode = {
+  id: number;
+  code: string;
+  label: string;
+  sort_order: number;
+  meta_json: Record<string, unknown> | null;
+};
+
+export type CommonCodeGroup = {
+  id: number;
+  group_key: string;
+  group_name: string;
+  description: string | null;
+  codes: CommonCode[];
+};
+
 export type MatchSummary = {
   match_id: string;
   game_version?: string | null;

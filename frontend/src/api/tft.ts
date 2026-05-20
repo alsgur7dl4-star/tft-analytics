@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import type { CompStats, MatchSummary, RecommendationResult, SummonerSummary } from "@/api/types";
+import type { BatchJobLog, CommonCodeGroup, CompStats, MatchSummary, RecommendationResult, SummonerSummary } from "@/api/types";
 
 export async function searchRiotAccount(gameName: string, tagLine: string, region = "KR") {
   const { data } = await apiClient.get<{ game_name: string; tag_line: string; puuid: string; region: string }>(
@@ -51,5 +51,36 @@ export async function triggerStatsJob() {
     "/api/admin/jobs/recalculate-tft-stats"
   );
   return data;
+}
+
+export async function getJobLogs(runId: number) {
+  const { data } = await apiClient.get<BatchJobLog[]>(`/api/admin/jobs/runs/${runId}/logs`);
+  return data;
+}
+
+export async function getCodeGroups() {
+  const { data } = await apiClient.get<CommonCodeGroup[]>("/api/admin/codes/groups");
+  return data;
+}
+
+export async function createCodeGroup(body: { group_key: string; group_name: string; description?: string }) {
+  const { data } = await apiClient.post<CommonCodeGroup>("/api/admin/codes/groups", body);
+  return data;
+}
+
+export async function deleteCodeGroup(groupKey: string) {
+  await apiClient.delete(`/api/admin/codes/groups/${groupKey}`);
+}
+
+export async function addCode(groupKey: string, body: { code: string; label: string; sort_order?: number }) {
+  const { data } = await apiClient.post<{ id: number; code: string; label: string; sort_order: number }>(
+    `/api/admin/codes/groups/${groupKey}/codes`,
+    body
+  );
+  return data;
+}
+
+export async function deleteCode(codeId: number) {
+  await apiClient.delete(`/api/admin/codes/${codeId}`);
 }
 

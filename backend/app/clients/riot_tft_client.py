@@ -64,3 +64,23 @@ class RiotTftClient:
         url = f"https://{routing}.api.riotgames.com/tft/match/v1/matches/{match_id}"
         return await self._request(url)
 
+    async def get_challenger_league(self, region: str | None = None) -> dict[str, Any]:
+        region = region or settings.riot_default_region
+        url = f"https://{region}.api.riotgames.com/tft/league/v1/challenger"
+        return await self._request(url, {"queue": "RANKED_TFT"})
+
+    async def get_grandmaster_league(self, region: str | None = None) -> dict[str, Any]:
+        region = region or settings.riot_default_region
+        url = f"https://{region}.api.riotgames.com/tft/league/v1/grandmaster"
+        return await self._request(url, {"queue": "RANKED_TFT"})
+
+    async def get_summoner_by_summoner_id(self, summoner_id: str, region: str | None = None) -> dict[str, Any]:
+        region = region or settings.riot_default_region
+        url = f"https://{region}.api.riotgames.com/tft/summoner/v1/summoners/{summoner_id}"
+        return await self._request(url)
+
+    async def get_account_by_puuid(self, puuid: str, routing: str | None = None) -> dict[str, Any]:
+        routing = routing or settings.riot_default_routing
+        url = f"https://{routing}.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}"
+        return await self._request(url)
+

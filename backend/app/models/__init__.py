@@ -1,5 +1,5 @@
 from app.models.base import Base
-from app.models.common import BatchJobRun, CommonCode, CommonCodeGroup, DataSource
+from app.models.common import BatchJobLog, BatchJobRun, CommonCode, CommonCodeGroup, DataSource
 from app.models.tft import (
     RiotAccount,
     TftAugment,
@@ -19,6 +19,7 @@ from app.models.user import RefreshToken, User, UserRole
 
 __all__ = [
     "Base",
+    "BatchJobLog",
     "BatchJobRun",
     "CommonCode",
     "CommonCodeGroup",

@@ -1,4 +1,4 @@
-# TFT Analytics AI Handoff Rules
+﻿# TFT Analytics AI Handoff Rules
 
 ## Project
 
@@ -44,4 +44,3 @@ This repository is a new TFT analytics service: Riot API based TFT match lookup,
 - Authenticated features require login and redirect anonymous users to `/login`.
 - Axios must use `withCredentials: true`.
 - API base URL comes from `NEXT_PUBLIC_API_URL`, defaulting to `http://localhost:8000`.
-

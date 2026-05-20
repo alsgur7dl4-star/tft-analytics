@@ -1,5 +1,17 @@
 from app.schemas.recommendation import RecommendationResult
 
+_DIFFICULTY_BY_PICK_RATE = [
+    (0.05, "EASY"),
+    (0.02, "MEDIUM"),
+]
+
+
+def _difficulty(pick_rate: float) -> str:
+    for threshold, label in _DIFFICULTY_BY_PICK_RATE:
+        if pick_rate >= threshold:
+            return label
+    return "HIGH"
+
 
 def recommend_from_early_units(
     comp_rows: list[tuple],
@@ -36,7 +48,7 @@ def recommend_from_early_units(
                 top4_rate=stat.top4_rate,
                 first_rate=stat.first_rate,
                 pick_rate=stat.pick_rate,
-                difficulty="MEDIUM" if stat.pick_rate >= 0.03 else "HIGH",
+                difficulty=_difficulty(stat.pick_rate),
                 reason="보유 기물과 핵심 기물이 겹치고 최근 메타 점수가 반영된 추천입니다.",
             )
         )
