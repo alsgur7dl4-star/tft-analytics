@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import type { BatchJobLog, CommonCodeGroup, CompStats, MatchSummary, RecommendationResult, SummonerSummary } from "@/api/types";
+import type { BatchJobLog, CommonCodeGroup, CompStats, God, MatchSummary, RecommendationResult, SummonerSummary } from "@/api/types";
 
 export async function searchRiotAccount(gameName: string, tagLine: string, region = "KR") {
   const { data } = await apiClient.get<{ game_name: string; tag_line: string; puuid: string; region: string }>(
@@ -29,7 +29,17 @@ export async function getMetaComp(compId: string) {
   return data;
 }
 
-export async function recommendEarlyGame(payload: { units: string[]; items: string[]; augments: string[] }) {
+export async function getMetaGods(setName?: string) {
+  const { data } = await apiClient.get<God[]>("/api/tft/meta/gods", { params: setName ? { set_name: setName } : undefined });
+  return data;
+}
+
+export async function getMetaAugments() {
+  const { data } = await apiClient.get<{ augment_key: string }[]>("/api/tft/meta/augments");
+  return data;
+}
+
+export async function recommendEarlyGame(payload: { units: string[]; items: string[]; augments: string[]; gods: string[] }) {
   const { data } = await apiClient.post<RecommendationResult[]>("/api/tft/recommendations/early-game", payload);
   return data;
 }

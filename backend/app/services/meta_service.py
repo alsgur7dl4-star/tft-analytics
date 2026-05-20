@@ -37,7 +37,7 @@ class MetaService:
         ]
 
     def list_augments(self) -> list[dict]:
-        return []
+        return [{"augment_key": key} for key in self.stats.list_augment_keys()]
 
     def list_gods(self, set_name: str | None = None) -> list[GodResponse]:
         return [GodResponse.model_validate(god, from_attributes=True) for god in self.stats.list_gods(set_name)]

@@ -25,6 +25,16 @@ export type CompStats = {
   core_items: string[];
 };
 
+export type God = {
+  god_key: string;
+  god_name: string;
+  description?: string | null;
+  passive_desc?: string | null;
+  set_name?: string | null;
+  icon_url?: string | null;
+  sort_order: number;
+};
+
 export type RecommendationResult = {
   rank: number;
   comp_id: number;
@@ -33,6 +43,8 @@ export type RecommendationResult = {
   tier_label?: string | null;
   core_units: string[];
   final_comp: string[];
+  preferred_gods: string[];
+  god_match: boolean;
   matching_rate?: number | null;
   synergy_score?: number | null;
   avg_placement?: number | null;

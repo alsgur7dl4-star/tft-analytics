@@ -12,6 +12,17 @@ def recommend_from_artifacts(comp_rows: list[tuple], items: list[str]) -> list[R
         carry_item_score = 1.0 if selected & core_item_names else 0.0
         reliability = min(stat.games / 200.0, 1.0)
         score = synergy * 0.45 + carry_item_score * 0.25 + stat.score * 0.20 + reliability * 0.10
+
+        matched = selected & core_item_names
+        reason_parts: list[str] = []
+        if matched:
+            reason_parts.append(f"아이템 {len(matched)}개 일치")
+        if stat.tier_label in ("S", "A"):
+            reason_parts.append(f"{stat.tier_label}티어 덱")
+        if reliability >= 0.5:
+            reason_parts.append("충분한 표본")
+        reason = "·".join(reason_parts) + "하여 추천" if reason_parts else "메타 점수 기반 추천"
+
         results.append(
             RecommendationResult(
                 rank=0,
@@ -26,7 +37,7 @@ def recommend_from_artifacts(comp_rows: list[tuple], items: list[str]) -> list[R
                 top4_rate=stat.top4_rate,
                 first_rate=stat.first_rate,
                 pick_rate=stat.pick_rate,
-                reason="선택한 유물/아이템과 핵심 아이템 룰, 메타 점수, 표본 안정성을 함께 반영했습니다.",
+                reason=reason,
             )
         )
     results.sort(key=lambda result: result.score, reverse=True)

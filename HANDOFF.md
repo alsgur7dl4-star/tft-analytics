@@ -147,12 +147,23 @@ Initial Alembic migration creates:
 - **`repositories/tft_repository.py`**: WHAT 설명 한글 주석 제거 (CLAUDE.md 규칙 준수).
 - **`jobs/tft_stats_aggregator.py`**: WHAT 설명 한글 블록 주석 제거. 하드코딩된 `"KR"` 지역 → match에서 `region` 추출로 변경 (다지역 확장 대비).
 
+## 2026-05-20 Updates (7th pass) — 빌드업 페이지 기능 완성
+
+- **`repositories/stats_repository.py`**: `list_augment_keys()` 추가 — TftAugment에서 distinct augment_key 추출.
+- **`services/meta_service.py`**: `list_augments()` 스텁 → 실제 DB 데이터 반환으로 구현.
+- **`recommenders/artifact_recommender.py`**: `reason` 동적 생성 (아이템 일치 수, 티어, 표본 안정성 반영).
+- **`frontend/api/types.ts`**: `God` 타입 추가, `RecommendationResult`에 `preferred_gods: string[]`, `god_match: boolean` 추가.
+- **`frontend/api/tft.ts`**: `getMetaGods()`, `getMetaAugments()` 추가. `recommendEarlyGame` payload에 `gods: string[]` 추가.
+- **`frontend/screens/early-game-recommender-screen.tsx`**: 전면 재작성.
+  - 신(God) 선택 UI — `/api/tft/meta/gods`에서 목록 fetch 후 토글 버튼 칩으로 표시.
+  - 추천 결과 카드 개선 — 티어 배지, 난이도 배지, 신 일치 배지, 코어기물 태그, 기물일치율/시너지 표시.
+  - loading 상태 처리 추가.
+
 ## Next Work
 
 - **`alembic upgrade head`** 실행 → `selected_god_key` 인덱스 포함 신 선택 관련 컬럼/테이블 DB 반영.
-- **`scripts/seed_season17_gods.py`** — GODS 리스트에 실제 Season 17 신 목록 입력 후 실행.
+- **`scripts/seed_season17_gods.py`** — GODS 리스트에 실제 Season 17 신 목록 입력 후 실행 → 신 선택 UI 활성화.
 - Riot API key를 `backend/.env`에 설정 (`RIOT_API_KEY=RGAPI-...`) → 매치 수집 재실행 시 `selected_god_key` 자동 수집.
-- Build-Up 프론트엔드 페이지 구현: `/api/tft/meta/champions`로 2-1 기물 선택, `/api/tft/meta/gods`로 신 선택 UI, `/api/tft/recommendations/early-game`에 `gods` 포함 요청.
 - Create an initial admin account with `python -m app.scripts.create_admin`.
 - Install frontend dependencies (`npm install`) and run `npm run dev`.
 - Implement MCP server exposing TFT meta tools for AI assistants.
