@@ -6,6 +6,20 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 
+class TftStaticGod(Base):
+    __tablename__ = "tft_static_gods"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    god_key: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
+    god_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    passive_desc: Mapped[str | None] = mapped_column(Text)
+    set_name: Mapped[str | None] = mapped_column(String(40))
+    icon_url: Mapped[str | None] = mapped_column(String(255))
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
 class RiotAccount(Base):
     __tablename__ = "riot_accounts"
 
@@ -86,6 +100,7 @@ class TftMatchParticipant(Base):
     units_json: Mapped[list | None] = mapped_column(JSON)
     augments_json: Mapped[list | None] = mapped_column(JSON)
     companion_json: Mapped[dict | None] = mapped_column(JSON)
+    selected_god_key: Mapped[str | None] = mapped_column(String(120), index=True)
 
     match: Mapped[TftMatch] = relationship(back_populates="participants")
     units: Mapped[list["TftUnit"]] = relationship(back_populates="participant", cascade="all, delete-orphan")
@@ -159,6 +174,7 @@ class TftComp(Base):
     core_units_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     core_traits_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
     core_items_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    preferred_gods_json: Mapped[list | None] = mapped_column(JSON)
     description: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -214,6 +230,7 @@ class TftRecommendationLog(Base):
     input_units_json: Mapped[list | None] = mapped_column(JSON)
     input_items_json: Mapped[list | None] = mapped_column(JSON)
     input_augments_json: Mapped[list | None] = mapped_column(JSON)
+    input_gods_json: Mapped[list | None] = mapped_column(JSON)
     recommendation_result_json: Mapped[list] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

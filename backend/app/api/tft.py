@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 
 from app.api.deps import CurrentUser, DbSession
-from app.schemas.tft import CompStatsResponse, MatchSummaryResponse, RiotAccountResponse, SummonerSummaryResponse, UnitStatsResponse
+from app.schemas.tft import ChampionResponse, CompStatsResponse, GodResponse, MatchSummaryResponse, RiotAccountResponse, SummonerSummaryResponse, UnitStatsResponse
 from app.services.meta_service import MetaService
 from app.services.tft_service import TftService
 
@@ -57,4 +57,14 @@ def list_items(db: DbSession, _: CurrentUser) -> list[dict]:
 @router.get("/meta/augments")
 def list_augments(db: DbSession, _: CurrentUser) -> list[dict]:
     return MetaService(db).list_augments()
+
+
+@router.get("/meta/gods", response_model=list[GodResponse])
+def list_gods(db: DbSession, _: CurrentUser, set_name: str | None = Query(default=None)) -> list[GodResponse]:
+    return MetaService(db).list_gods(set_name)
+
+
+@router.get("/meta/champions", response_model=list[ChampionResponse])
+def list_champions(db: DbSession, _: CurrentUser) -> list[ChampionResponse]:
+    return MetaService(db).list_champions()
 

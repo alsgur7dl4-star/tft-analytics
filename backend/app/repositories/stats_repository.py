@@ -1,7 +1,7 @@
-from sqlalchemy import select
+from sqlalchemy import distinct, select
 from sqlalchemy.orm import Session
 
-from app.models.tft import TftComp, TftCompStatsDaily, TftItem, TftUnitStatsDaily
+from app.models.tft import TftComp, TftCompStatsDaily, TftItem, TftStaticGod, TftUnit, TftUnitStatsDaily
 
 
 class StatsRepository:
@@ -46,4 +46,20 @@ class StatsRepository:
 
     def list_items(self, limit: int = 200) -> list[TftItem]:
         return list(self.db.scalars(select(TftItem).order_by(TftItem.item_name.asc()).limit(limit)))
+
+    def list_gods(self, set_name: str | None = None) -> list[TftStaticGod]:
+        q = select(TftStaticGod)
+        if set_name:
+            q = q.where(TftStaticGod.set_name == set_name)
+        return list(self.db.scalars(q.order_by(TftStaticGod.sort_order.asc(), TftStaticGod.god_name.asc())))
+
+    def list_unit_keys(self, limit: int = 200) -> list[dict]:
+        rows = self.db.execute(
+            select(TftUnit.character_id, TftUnit.name)
+            .where(TftUnit.character_id != "")
+            .distinct(TftUnit.character_id)
+            .order_by(TftUnit.character_id.asc())
+            .limit(limit)
+        ).all()
+        return [{"unit_key": char_id, "unit_name": name} for char_id, name in rows]
 

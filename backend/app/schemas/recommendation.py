@@ -7,6 +7,7 @@ class EarlyGameRecommendationRequest(BaseModel):
     units: list[str] = Field(min_length=3, max_length=8)
     items: list[str] = Field(default_factory=list, max_length=8)
     augments: list[str] = Field(default_factory=list, max_length=8)
+    gods: list[str] = Field(default_factory=list, max_length=4)
 
 
 class ArtifactRecommendationRequest(BaseModel):
@@ -26,6 +27,8 @@ class RecommendationResult(BaseModel):
     tier_label: str | None = None
     core_units: list[Any] = Field(default_factory=list)
     final_comp: list[Any] = Field(default_factory=list)
+    preferred_gods: list[str] = Field(default_factory=list)
+    god_match: bool = False
     matching_rate: float | None = None
     synergy_score: float | None = None
     avg_placement: float | None = None

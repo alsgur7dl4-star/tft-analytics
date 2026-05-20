@@ -123,13 +123,36 @@ Initial Alembic migration creates:
 | common_code_groups | 5 |
 | common_codes | 19 |
 
+## 2026-05-20 Updates (5th pass) — Season 17 신(God) 선택 지원
+
+- **Migration `202605200002`**: `tft_static_gods` 테이블 생성, `tft_match_participants.selected_god_key`, `tft_comps.preferred_gods_json`, `tft_recommendation_logs.input_gods_json` 컬럼 추가.
+- **`models/tft.py`**: `TftStaticGod` 모델 추가, 기존 모델에 신 관련 컬럼 반영.
+- **`schemas/recommendation.py`**: `EarlyGameRecommendationRequest`에 `gods: list[str]` 추가, `RecommendationResult`에 `preferred_gods`, `god_match` 추가.
+- **`schemas/tft.py`**: `GodResponse`, `ChampionResponse` 추가.
+- **`repositories/stats_repository.py`**: `list_gods()`, `list_unit_keys()` 추가.
+- **`repositories/recommendation_repository.py`**: `create_log()`에 `input_gods` 파라미터 추가.
+- **`repositories/tft_repository.py`**: `create_match_from_raw()`에서 `selected_god_key` 파싱 추가 (`selected_god` / `god_key` / `tft_god_key` 순서로 시도).
+- **`recommenders/early_game_recommender.py`**: `gods` 파라미터 추가, 가중치 재조정 (기물 0.30 + 코어포함 0.20 + 아이템 0.15 + 신 0.15 + 증강체 0.05 + 메타 0.15). `preferred_gods_json` 없으면 중립(0.5) 처리.
+- **`services/recommendation_service.py`**: `gods` 전달 반영.
+- **`services/meta_service.py`**: `list_gods()`, `list_champions()` 추가.
+- **`api/tft.py`**: `GET /api/tft/meta/gods`, `GET /api/tft/meta/champions` 엔드포인트 추가.
+- **`jobs/tft_stats_aggregator.py`**: top4 참가자의 신 선택 집계 → `TftComp.preferred_gods_json` 상위 3개 자동 갱신.
+- **`scripts/seed_season17_gods.py`**: Season 17 신 목록 시드 스크립트 생성 (GODS 리스트 채워 넣으면 실행 가능).
+
+## 2026-05-20 Updates (6th pass) — 코드 품질 수정
+
+- **Migration `202605200002`**: `selected_god_key` 인덱스 누락 수정 — `op.create_index()` 추가 및 `downgrade()`에 `op.drop_index()` 추가.
+- **`repositories/stats_repository.py`**: `list_unit_keys()` — `DISTINCT ON` 쿼리 이후 Python 이중 dedup + re-sort 제거. DB가 이미 보장하므로 단순 list comprehension으로 변경.
+- **`recommenders/early_game_recommender.py`**: `augment_match` 스케일 오류 수정 (`0.2` → `1.0`). 다른 점수 변수와 동일한 0~1 스케일로 통일 (기존에는 weight 0.05 × max 0.2 = 최대 1% 기여). 하드코딩된 `reason` 문자열을 동적 생성으로 변경 — 기물/아이템/신 일치 항목을 조합해 반환.
+- **`repositories/tft_repository.py`**: WHAT 설명 한글 주석 제거 (CLAUDE.md 규칙 준수).
+- **`jobs/tft_stats_aggregator.py`**: WHAT 설명 한글 블록 주석 제거. 하드코딩된 `"KR"` 지역 → match에서 `region` 추출로 변경 (다지역 확장 대비).
+
 ## Next Work
 
-- Add Riot API key to `backend/.env` (`RIOT_API_KEY=RGAPI-...`).
+- **`alembic upgrade head`** 실행 → `selected_god_key` 인덱스 포함 신 선택 관련 컬럼/테이블 DB 반영.
+- **`scripts/seed_season17_gods.py`** — GODS 리스트에 실제 Season 17 신 목록 입력 후 실행.
+- Riot API key를 `backend/.env`에 설정 (`RIOT_API_KEY=RGAPI-...`) → 매치 수집 재실행 시 `selected_god_key` 자동 수집.
+- Build-Up 프론트엔드 페이지 구현: `/api/tft/meta/champions`로 2-1 기물 선택, `/api/tft/meta/gods`로 신 선택 UI, `/api/tft/recommendations/early-game`에 `gods` 포함 요청.
 - Create an initial admin account with `python -m app.scripts.create_admin`.
-- Run FastAPI locally and smoke-test auth endpoints.
 - Install frontend dependencies (`npm install`) and run `npm run dev`.
-- Implement unit-level item recommendation API and frontend screen.
-- Implement unit/comp name search API with tier filter.
 - Implement MCP server exposing TFT meta tools for AI assistants.
-- Expand match normalization and meta aggregation with live data once Riot API key is active.

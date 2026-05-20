@@ -47,7 +47,6 @@ def _load_valid_tier_labels(db: Session) -> list[str]:
 
 
 def recalculate_tft_stats(db: Session) -> dict[str, str]:
-    # 공통코드에서 유효 티어 라벨 조회 (공통코드 활용 지점)
     valid_tier_labels = _load_valid_tier_labels(db)
 
     participants = list(
@@ -59,7 +58,6 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
     if not participants:
         return {"status": "SKIP", "message": "수집된 경기 데이터가 없습니다."}
 
-    # 시너지 기반 조합 그룹핑
     groups: dict[str, list[TftMatchParticipant]] = defaultdict(list)
     for p in participants:
         fp = _trait_fingerprint(p.traits_json or [])
@@ -69,7 +67,6 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
     total_games = len(participants)
     today = datetime.now(timezone.utc).date()
 
-    # 그룹별 통계 계산 (표본 5경기 이상만)
     comp_data: dict[str, dict[str, Any]] = {}
     max_pick_rate = 0.0
     for fp, group in groups.items():
@@ -82,6 +79,13 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
         first_rate = sum(1 for pl in placements if pl == 1) / games
         pick_rate = games / total_games
         max_pick_rate = max(max_pick_rate, pick_rate)
+
+        god_counter: dict[str, int] = defaultdict(int)
+        for p in group:
+            if p.placement <= 4 and p.selected_god_key:
+                god_counter[p.selected_god_key] += 1
+        preferred_gods = [g for g, _ in sorted(god_counter.items(), key=lambda x: -x[1])[:3]]
+
         comp_data[fp] = {
             "games": games,
             "avg_placement": avg_placement,
@@ -89,12 +93,12 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
             "first_rate": first_rate,
             "pick_rate": pick_rate,
             "sample": group[0],
+            "preferred_gods": preferred_gods,
         }
 
     if not comp_data:
         return {"status": "SKIP", "message": "통계 계산 가능한 조합이 없습니다 (최소 5경기 필요)."}
 
-    # 점수 계산
     for fp, data in comp_data.items():
         data["score"] = calculate_comp_score(
             data["top4_rate"],
@@ -106,21 +110,19 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
             min_sample_count=5,
         )
 
-    # 점수 순 정렬 후 공통코드 기반 티어 라벨 부여
     ranked = sorted(comp_data.keys(), key=lambda f: comp_data[f]["score"], reverse=True)
     total = len(ranked)
     for rank, fp in enumerate(ranked):
         label = assign_tier_label(rank / total)
-        # 공통코드에 없는 라벨은 마지막 유효 라벨로 대체
         comp_data[fp]["tier_label"] = label if label in valid_tier_labels else valid_tier_labels[-1]
 
-    # TftComp + TftCompStatsDaily upsert
     saved = 0
     for fp, data in comp_data.items():
         sample: TftMatchParticipant = data["sample"]
         match = db.get(TftMatch, sample.match_id)
         set_name = (match.set_name or "unknown") if match else "unknown"
         patch = (match.game_version or "latest") if match else "latest"
+        region = (match.region or "KR") if match else "KR"
 
         units = _core_units(sample.units_json or [])
         traits = _active_traits(sample.traits_json or [])
@@ -134,26 +136,29 @@ def recalculate_tft_stats(db: Session) -> dict[str, str]:
                 core_units_json=units,
                 core_traits_json=traits,
                 core_items_json=[],
+                preferred_gods_json=data["preferred_gods"] or None,
             )
             db.add(comp)
         else:
             comp.core_units_json = units
             comp.core_traits_json = traits
             comp.patch_version = patch
+            if data["preferred_gods"]:
+                comp.preferred_gods_json = data["preferred_gods"]
         db.flush()
 
         existing = db.scalar(
             select(TftCompStatsDaily).where(
                 TftCompStatsDaily.stat_date == today,
                 TftCompStatsDaily.comp_id == comp.id,
-                TftCompStatsDaily.region == "KR",
+                TftCompStatsDaily.region == region,
             )
         )
         stat_row = existing or TftCompStatsDaily(
             stat_date=today,
             set_name=set_name,
             patch_version=patch,
-            region="KR",
+            region=region,
             comp_id=comp.id,
         )
         stat_row.games = data["games"]

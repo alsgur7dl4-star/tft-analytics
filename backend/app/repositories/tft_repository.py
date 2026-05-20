@@ -99,6 +99,11 @@ class TftRepository:
         self.db.add(match)
         self.db.flush()
         for participant_raw in info.get("participants", []):
+            selected_god_key = (
+                participant_raw.get("selected_god")
+                or participant_raw.get("god_key")
+                or participant_raw.get("tft_god_key")
+            )
             participant = TftMatchParticipant(
                 match_id=match.id,
                 puuid=participant_raw.get("puuid", ""),
@@ -112,6 +117,7 @@ class TftRepository:
                 units_json=participant_raw.get("units", []),
                 augments_json=participant_raw.get("augments", []),
                 companion_json=participant_raw.get("companion"),
+                selected_god_key=selected_god_key,
             )
             self.db.add(participant)
             self.db.flush()

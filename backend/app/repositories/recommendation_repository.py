@@ -14,12 +14,14 @@ class RecommendationRepository:
         input_units: list[str] | None = None,
         input_items: list[str] | None = None,
         input_augments: list[str] | None = None,
+        input_gods: list[str] | None = None,
     ) -> TftRecommendationLog:
         log = TftRecommendationLog(
             user_id=user_id,
             input_units_json=input_units,
             input_items_json=input_items,
             input_augments_json=input_augments,
+            input_gods_json=input_gods,
             recommendation_result_json=result,
         )
         self.db.add(log)

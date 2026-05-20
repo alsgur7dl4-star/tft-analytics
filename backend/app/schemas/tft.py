@@ -65,3 +65,21 @@ class UnitStatsResponse(BaseModel):
     first_rate: float
     pick_rate: float
 
+
+class GodResponse(BaseModel):
+    god_key: str
+    god_name: str
+    description: str | None = None
+    passive_desc: str | None = None
+    set_name: str | None = None
+    icon_url: str | None = None
+    sort_order: int = 0
+
+    model_config = {"from_attributes": True}
+
+
+class ChampionResponse(BaseModel):
+    unit_key: str
+    unit_name: str | None = None
+    cost: int | None = None
+

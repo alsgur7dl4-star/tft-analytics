@@ -18,13 +18,20 @@ class RecommendationService:
         self.logs = RecommendationRepository(db)
 
     def recommend_early_game(self, user_id: int, data: EarlyGameRecommendationRequest) -> list[RecommendationResult]:
-        results = recommend_from_early_units(self.stats.list_latest_comp_stats(limit=100), data.units, data.items, data.augments)
+        results = recommend_from_early_units(
+            self.stats.list_latest_comp_stats(limit=100),
+            data.units,
+            data.items,
+            data.augments,
+            data.gods,
+        )
         self.logs.create_log(
             user_id,
             [result.model_dump() for result in results],
             input_units=data.units,
             input_items=data.items,
             input_augments=data.augments,
+            input_gods=data.gods,
         )
         self.db.commit()
         return results

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core import error_codes
 from app.core.exceptions import AppException
 from app.repositories.stats_repository import StatsRepository
-from app.schemas.tft import CompStatsResponse, UnitStatsResponse
+from app.schemas.tft import ChampionResponse, CompStatsResponse, GodResponse, UnitStatsResponse
 
 
 class MetaService:
@@ -38,6 +38,13 @@ class MetaService:
 
     def list_augments(self) -> list[dict]:
         return []
+
+    def list_gods(self, set_name: str | None = None) -> list[GodResponse]:
+        return [GodResponse.model_validate(god, from_attributes=True) for god in self.stats.list_gods(set_name)]
+
+    def list_champions(self) -> list[ChampionResponse]:
+        rows = self.stats.list_unit_keys()
+        return [ChampionResponse(unit_key=r["unit_key"], unit_name=r["unit_name"]) for r in rows]
 
     def _comp_stats_to_response(self, stat, comp) -> CompStatsResponse:
         return CompStatsResponse(
